@@ -1,4 +1,4 @@
-// main.js - 얼굴 이미지 분석 + 자동 안경 위치 정렬 + 안경 PNG 자동 배경 제거
+// main.js - 새 UI 구성에 맞춘 이미지 업로드 및 자동 배경 제거, 안경 합성
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 let faceImage = null;
@@ -38,7 +38,7 @@ function removeWhiteBackground(image, callback) {
     const g = imgData.data[i + 1];
     const b = imgData.data[i + 2];
     if (r > 240 && g > 240 && b > 240) {
-      imgData.data[i + 3] = 0; // 알파값 제거
+      imgData.data[i + 3] = 0;
     }
   }
   tempCtx.putImageData(imgData, 0, 0);
@@ -76,8 +76,8 @@ function loadImage(input, isFace) {
   reader.readAsDataURL(file);
 }
 
-document.getElementById('faceInput').addEventListener('change', e => loadImage(e.target, true));
-document.getElementById('glassesInput').addEventListener('change', e => loadImage(e.target, false));
+document.getElementById('faceInputBox').addEventListener('change', e => loadImage(e.target, true));
+document.getElementById('glassesInputBox').addEventListener('change', e => loadImage(e.target, false));
 
 document.getElementById('scale').addEventListener('input', draw);
 document.getElementById('rotate').addEventListener('input', draw);
