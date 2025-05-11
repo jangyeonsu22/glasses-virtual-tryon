@@ -20,10 +20,10 @@
 
   <section>
     <h2>1. 안경 이미지 업로드 및 편집</h2>
-    <label class="upload-box">
+    <label class="upload-box" for="glassesInputBox">
       안경 사진을 클릭하여 업로드하거나 드래그 앤 드롭하세요
-      <input type="file" id="glassesInputBox" accept="image/*" style="display: none;">
     </label>
+    <input type="file" id="glassesInputBox" accept="image/*" style="display: none;">
     <div class="controls">
       <button onclick="draw()">자동 배경 제거</button>
       <button onclick="alert('수동 지우기 기능 준비 중')">수동 지우기</button>
@@ -34,10 +34,10 @@
 
   <section>
     <h2>2. 얼굴 사진에 3D 안경 합성</h2>
-    <label class="upload-box">
+    <label class="upload-box" for="faceInputBox">
       얼굴 사진을 클릭하여 업로드하거나 드래그 앤 드롭하세요
-      <input type="file" id="faceInputBox" accept="image/*" style="display: none;">
     </label>
+    <input type="file" id="faceInputBox" accept="image/*" style="display: none;">
   </section>
 
   <canvas id="canvas" width="800" height="600"></canvas>
@@ -58,8 +58,6 @@
   </div>
 
   <script src="main.js"></script>
-  <script src="brush.js"></script>
-  <script src="glasses3d.js"></script>
   <script>
     function downloadImage() {
       const link = document.createElement('a');
