@@ -1,10 +1,30 @@
-// main.js
+// main.js - 얼굴 이미지 분석 + 자동 안경 위치 정렬 포함
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 let faceImage = null;
 let glassesImage = null;
 
-// 이미지 업로드 처리
+const faceMesh = new FaceMesh({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}` });
+faceMesh.setOptions({
+  maxNumFaces: 1,
+  refineLandmarks: true,
+  minDetectionConfidence: 0.5,
+  minTrackingConfidence: 0.5
+});
+
+faceMesh.onResults((results) => {
+  if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+    const landmarks = results.multiFaceLandmarks[0];
+    const leftEye = landmarks[33]; // 왼쪽 눈
+    const rightEye = landmarks[263]; // 오른쪽 눈
+    const centerX = (leftEye.x + rightEye.x) / 2 * canvas.width;
+    const centerY = (leftEye.y + rightEye.y) / 2 * canvas.height;
+    const eyeDist = Math.hypot((leftEye.x - rightEye.x), (leftEye.y - rightEye.y));
+    const scale = eyeDist * 5;
+    if (window.autoAlignToFace) window.autoAlignToFace((centerX - 400) / 100, -(centerY - 300) / 100, scale);
+  }
+});
+
 function loadImage(input, isFace) {
   const file = input.files[0];
   if (!file) return;
@@ -12,9 +32,25 @@ function loadImage(input, isFace) {
   reader.onload = () => {
     const img = new Image();
     img.onload = () => {
-      if (isFace) faceImage = img;
-      else glassesImage = img;
-      draw();
+      if (isFace) {
+        faceImage = img;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(faceImage, 0, 0, canvas.width, canvas.height);
+        const video = document.createElement('video');
+        video.src = reader.result;
+        video.width = canvas.width;
+        video.height = canvas.height;
+        const imageCanvas = document.createElement('canvas');
+        imageCanvas.width = canvas.width;
+        imageCanvas.height = canvas.height;
+        const imageCtx = imageCanvas.getContext('2d');
+        imageCtx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const image = new ImageData(imageCtx.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height);
+        faceMesh.send({ image: imageCanvas });
+      } else {
+        glassesImage = img;
+        draw();
+      }
     };
     img.src = reader.result;
   };
@@ -24,7 +60,6 @@ function loadImage(input, isFace) {
 document.getElementById('faceInput').addEventListener('change', e => loadImage(e.target, true));
 document.getElementById('glassesInput').addEventListener('change', e => loadImage(e.target, false));
 
-// 슬라이더 연동
 document.getElementById('scale').addEventListener('input', draw);
 document.getElementById('rotate').addEventListener('input', draw);
 document.getElementById('xOffset').addEventListener('input', draw);
