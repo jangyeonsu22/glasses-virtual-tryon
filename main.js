@@ -1,10 +1,11 @@
-// main.js - 새 UI 구성에 맞춘 이미지 업로드 및 자동 배경 제거, 안경 합성
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 let faceImage = null;
 let glassesImage = null;
 
-const faceMesh = new FaceMesh({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}` });
+const faceMesh = new FaceMesh({
+  locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+});
 faceMesh.setOptions({
   maxNumFaces: 1,
   refineLandmarks: true,
@@ -21,7 +22,9 @@ faceMesh.onResults((results) => {
     const centerY = (leftEye.y + rightEye.y) / 2 * canvas.height;
     const eyeDist = Math.hypot((leftEye.x - rightEye.x), (leftEye.y - rightEye.y));
     const scale = eyeDist * 5;
-    if (window.autoAlignToFace) window.autoAlignToFace((centerX - 400) / 100, -(centerY - 300) / 100, scale);
+    if (window.autoAlignToFace) {
+      window.autoAlignToFace((centerX - 400) / 100, -(centerY - 300) / 100, scale);
+    }
   }
 });
 
