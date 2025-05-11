@@ -1,4 +1,4 @@
-// main.js - 얼굴 이미지 분석 + 자동 안경 위치 정렬 포함
+// main.js - 얼굴 이미지 분석 + 자동 안경 위치 정렬 + 안경 PNG 자동 배경 제거
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 let faceImage = null;
@@ -15,8 +15,8 @@ faceMesh.setOptions({
 faceMesh.onResults((results) => {
   if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
     const landmarks = results.multiFaceLandmarks[0];
-    const leftEye = landmarks[33]; // 왼쪽 눈
-    const rightEye = landmarks[263]; // 오른쪽 눈
+    const leftEye = landmarks[33];
+    const rightEye = landmarks[263];
     const centerX = (leftEye.x + rightEye.x) / 2 * canvas.width;
     const centerY = (leftEye.y + rightEye.y) / 2 * canvas.height;
     const eyeDist = Math.hypot((leftEye.x - rightEye.x), (leftEye.y - rightEye.y));
@@ -24,6 +24,28 @@ faceMesh.onResults((results) => {
     if (window.autoAlignToFace) window.autoAlignToFace((centerX - 400) / 100, -(centerY - 300) / 100, scale);
   }
 });
+
+function removeWhiteBackground(image, callback) {
+  const tempCanvas = document.createElement('canvas');
+  const tempCtx = tempCanvas.getContext('2d');
+  tempCanvas.width = image.width;
+  tempCanvas.height = image.height;
+  tempCtx.drawImage(image, 0, 0);
+  const imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+
+  for (let i = 0; i < imgData.data.length; i += 4) {
+    const r = imgData.data[i];
+    const g = imgData.data[i + 1];
+    const b = imgData.data[i + 2];
+    if (r > 240 && g > 240 && b > 240) {
+      imgData.data[i + 3] = 0; // 알파값 제거
+    }
+  }
+  tempCtx.putImageData(imgData, 0, 0);
+  const output = new Image();
+  output.onload = () => callback(output);
+  output.src = tempCanvas.toDataURL();
+}
 
 function loadImage(input, isFace) {
   const file = input.files[0];
@@ -36,20 +58,17 @@ function loadImage(input, isFace) {
         faceImage = img;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(faceImage, 0, 0, canvas.width, canvas.height);
-        const video = document.createElement('video');
-        video.src = reader.result;
-        video.width = canvas.width;
-        video.height = canvas.height;
         const imageCanvas = document.createElement('canvas');
         imageCanvas.width = canvas.width;
         imageCanvas.height = canvas.height;
         const imageCtx = imageCanvas.getContext('2d');
         imageCtx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        const image = new ImageData(imageCtx.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height);
         faceMesh.send({ image: imageCanvas });
       } else {
-        glassesImage = img;
-        draw();
+        removeWhiteBackground(img, (outputImg) => {
+          glassesImage = outputImg;
+          draw();
+        });
       }
     };
     img.src = reader.result;
